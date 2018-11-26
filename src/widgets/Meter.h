@@ -251,6 +251,10 @@ class MeterPanel final : public wxPanelWrapper
    int       mRulerWidth;
    int       mRulerHeight;
 
+   wxColor   mGreen;
+   wxColor   mYellow;
+   wxColor   mRed;
+
    bool      mIsInput;
 
    Style     mStyle;

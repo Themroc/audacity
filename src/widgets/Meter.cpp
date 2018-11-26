@@ -220,6 +220,9 @@ MeterPanel::MeterPanel(AudacityProject *project,
    mQueue(1024),
    mWidth(size.x),
    mHeight(size.y),
+   mGreen(theTheme.Colour(clrMeterGreen)),
+   mYellow(theTheme.Colour(clrMeterYellow)),
+   mRed(theTheme.Colour(clrMeterRed)),
    mIsInput(isInput),
    mDesiredStyle(style),
    mGradient(true),
@@ -440,11 +443,6 @@ void MeterPanel::OnPaint(wxPaintEvent & WXUNUSED(event))
          dc.DrawText(mRightText, mRightTextPos.x, mRightTextPos.y);
       }
    
-      // Setup the colors for the 3 sections of the meter bars
-      wxColor green(117, 215, 112);
-      wxColor yellow(255, 255, 0);
-      wxColor red(255, 0, 0);
-   
       // Draw the meter bars at maximum levels
       for (unsigned int i = 0; i < mNumBars; i++)
       {
@@ -480,17 +478,17 @@ void MeterPanel::OnPaint(wxPaintEvent & WXUNUSED(event))
             {
                // Draw the "critical" segment (starts at top of meter and works down)
                r.SetHeight(gradh);
-               dc.GradientFillLinear(r, red, yellow, wxSOUTH);
+               dc.GradientFillLinear(r, mRed, mYellow, wxSOUTH);
    
                // Draw the "warning" segment
                r.SetTop(r.GetBottom());
-               dc.GradientFillLinear(r, yellow, green, wxSOUTH);
+               dc.GradientFillLinear(r, mYellow, mGreen, wxSOUTH);
    
                // Draw the "safe" segment
                r.SetTop(r.GetBottom());
                r.SetBottom(mBar[i].r.GetBottom());
                dc.SetPen(*wxTRANSPARENT_PEN);
-               dc.SetBrush(green);
+               dc.SetBrush(mGreen);
                dc.DrawRectangle(r);
             }
             else
@@ -498,18 +496,18 @@ void MeterPanel::OnPaint(wxPaintEvent & WXUNUSED(event))
                // Draw the "safe" segment
                r.SetWidth(r.GetWidth() - (int) (gradw + gradw + 0.5));
                dc.SetPen(*wxTRANSPARENT_PEN);
-               dc.SetBrush(green);
+               dc.SetBrush(mGreen);
                dc.DrawRectangle(r);
    
                // Draw the "warning"  segment
                r.SetLeft(r.GetRight() + 1);
                r.SetWidth(floor(gradw));
-               dc.GradientFillLinear(r, green, yellow);
+               dc.GradientFillLinear(r, mGreen, mYellow);
    
                // Draw the "critical" segment
                r.SetLeft(r.GetRight() + 1);
                r.SetRight(mBar[i].r.GetRight());
-               dc.GradientFillLinear(r, yellow, red);
+               dc.GradientFillLinear(r, mYellow, mRed);
             }
 #ifdef EXPERIMENTAL_METER_LED_STYLE
             if (!mBar[i].vert)
