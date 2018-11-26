@@ -72,6 +72,18 @@ void ProjectsPrefs::PopulateOrExchange(ShuttleGui & S)
       S.EndRadioButtonGroup();
    }
    S.EndStatic();
+
+   S.StartStatic(_("Options"));
+   {
+      S.StartVerticalLay();
+      {
+         S.TieCheckBox(_("&Load most recent project on startup"), "/Prefs/Autoload", false);
+      }
+      S.EndVerticalLay();
+   }
+   S.EndStatic();
+
+
    S.EndScroller();
 
 }

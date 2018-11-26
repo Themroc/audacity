@@ -1419,6 +1419,9 @@ bool AudacityApp::OnInit()
    mRecentFiles = std::make_unique<FileHistory>(ID_RECENT_LAST - ID_RECENT_FIRST + 1, ID_RECENT_CLEAR);
    mRecentFiles->Load(*gPrefs, wxT("RecentFiles"));
 
+   mbAutoload = false;
+   gPrefs->Read(wxT("/Prefs/Autoload"), &mbAutoload, false);
+
    theTheme.EnsureInitialised();
 
    // AColor depends on theTheme.
@@ -1459,6 +1462,11 @@ bool AudacityApp::OnInit()
    {
       wxPrintf("Audacity v%s\n", AUDACITY_VERSION_STRING);
       exit(0);
+   }
+
+   if (parser->Found(wxT("a")))
+   {
+      mbAutoload= true;
    }
 
    long lval;
@@ -1635,6 +1643,11 @@ bool AudacityApp::OnInit()
          {
             RunBenchmark(NULL);
             QuitAudacity(true);
+         }
+
+         if (mbAutoload)
+         {
+            SafeMRUOpen(mRecentFiles->GetHistoryFile(0));
          }
 
          // As of wx3, there's no need to process the filename arguments as they
@@ -2039,6 +2052,10 @@ std::unique_ptr<wxCmdLineParser> AudacityApp::ParseCommandLine()
    {
       return nullptr;
    }
+
+   /*i18n-hint: This forces Audacity to load the most recently used
+    *           project */
+   parser->AddSwitch(wxT("a"), wxT("autoload"), _("auto-load most recent project"));
 
    /*i18n-hint: This controls the number of bytes that Audacity will
     *           use when writing files to the disk */
