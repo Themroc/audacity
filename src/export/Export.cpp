@@ -39,6 +39,7 @@
 #include <wx/statbox.h>
 #include <wx/stattext.h>
 #include <wx/string.h>
+#include <wx/regex.h>
 #include <wx/textctrl.h>
 #include <wx/timer.h>
 #include <wx/dcmemory.h>
@@ -379,6 +380,17 @@ bool Exporter::Process(AudacityProject *project, bool selectedOnly, double t0, d
       return false;
    }
 
+   // Let user edit MetaData
+   bool bFirst = false;
+   gPrefs->Read(wxT("/Export/FirstAskMeta"), &bFirst, false);
+   if (bFirst) {
+      if (!(EditActions::DoEditMetadata( *project,
+         _("Edit Metadata Tags"), _("Exported Tags"),
+         mProject->GetShowId3Dialog()))) {
+         return false;
+      }
+   }
+
    // Ask user for file name
    if (!GetFilename()) {
       return false;
@@ -390,7 +402,7 @@ bool Exporter::Process(AudacityProject *project, bool selectedOnly, double t0, d
    }
 
    // Let user edit MetaData
-   if (mPlugins[mFormat]->GetCanMetaData(mSubFormat)) {
+   if (!bFirst && mPlugins[mFormat]->GetCanMetaData(mSubFormat)) {
       if (!(EditActions::DoEditMetadata( *project,
          _("Edit Metadata Tags"), _("Exported Tags"),
          mProject->GetShowId3Dialog()))) {
@@ -521,6 +533,17 @@ bool Exporter::ExamineTracks()
    return true;
 }
 
+void TagConv(wxString & str, const wxString & tag, const wxString & n, const wxString & v)
+{
+   if (n.CmpNoCase(tag))
+      return;
+   wxString rt = wxT("\\{");
+   rt.append(tag.Cmp(TAG_TRACK) ? tag : "track[a-z]*");
+   rt.append(wxT("\\}"));
+   wxRegEx re(rt, wxRE_EXTENDED|wxRE_ICASE);
+   re.ReplaceAll(&str, v);
+}
+
 bool Exporter::GetFilename()
 {
    mFormat = -1;
@@ -559,9 +582,33 @@ bool Exporter::GetFilename()
 
 //Bug 1304: Set a default path if none was given.  For Export.
    mFilename = FileNames::DefaultToDocumentsFolder(wxT("/Export/Path"));
-   mFilename.SetName(mProject->GetName());
-   if (mFilename.GetName().empty())
-      mFilename.SetName(_("untitled"));
+
+   bool bPrefgen = false;
+   gPrefs->Read(wxT("/Export/PreferGenName"), &bPrefgen, false);
+   if (!bPrefgen) {
+      mFilename.SetName(mProject->GetName());
+   }
+
+   if (mFilename.GetName().empty()) {
+      wxString tpl, t;
+      gPrefs->Read(wxT("/Export/FilenameTpl"), &tpl, wxT(""));
+      if (!tpl.IsEmpty()) {
+         auto tags = mProject->GetTags();
+         t = wxString(tpl);
+         for (const auto &pair : tags->GetRange()) {
+            const auto &n = pair.first;
+            const auto &v = pair.second;
+            TagConv(t, TAG_TITLE, n, v);
+            TagConv(t, TAG_ARTIST, n, v);
+            TagConv(t, TAG_ALBUM, n, v);
+            TagConv(t, TAG_YEAR, n, v);
+            TagConv(t, TAG_GENRE, n, v);
+            TagConv(t, TAG_COMMENTS, n, v);
+            TagConv(t, TAG_TRACK, n, v);
+         }
+      }
+      mFilename.SetName(t.Cmp(tpl) ? t : _("untitled"));
+   }
    while (true) {
       // Must reset each iteration
       mBook = NULL;
