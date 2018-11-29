@@ -184,6 +184,8 @@ class AudacityApp final : public wxApp {
    std::unique_ptr<CommandHandler> mCmdHandler;
    std::unique_ptr<FileHistory> mRecentFiles;
 
+   bool mbAutoload;
+
    std::unique_ptr<wxLocale> mLocale;
 
    std::unique_ptr<wxSingleInstanceChecker> mChecker;
