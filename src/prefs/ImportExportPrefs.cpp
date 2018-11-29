@@ -86,6 +86,18 @@ void ImportExportPrefs::PopulateOrExchange(ShuttleGui & S)
       // This documentation is unlikely to help somebody who cannot figure it out by discovering the Options button in the dialog.
       // It's only clutter in this Prefs tab, so removed.
       //    S.AddFixedText(_("Note: Export quality options can be chosen by clicking the Options\nbutton in the Export dialog."));
+
+      S.TieCheckBox(_("Show Metadata Tags editor before asking for filename"),
+                     wxT("/Export/FirstAskMeta"),
+                     false);
+      S.TieCheckBox(_("&Prefer filename generated from metadata over project name when exporting"),
+                    wxT("/Export/PreferGenName"),
+                    false);
+      S.TieTextBox(_("&Template for filename from metadata"),
+                   wxT("/Export/FilenameTpl"),
+                   wxT("{Artist} - {Album} - {Track} - {Title}"),
+                   30);
+      S.AddFixedText(_("Possible placeholder: {Artist}, {Title}, {Album}, {Track} (or {Tracknumber}), {Date}, {Genre}, {Comments}."));
    }
    S.EndStatic();
 #ifdef USE_MIDI
